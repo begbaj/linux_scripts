@@ -13,3 +13,6 @@ rm -rIf dolphin kate kcookiejar kded5 keyrings klipper kmail2 knewstuff3 konsole
 cd ~/.config/
 rm -rIf akonadi* KDE kconf_updaterc baloo* dolphinrc drkonqirc gwenviewrc kmail2rc k*rc katemetainfos
 # It wipes config of all software, but helps
+# CREDIT FOR THIS SCRIPT GOES TO SOMEONE ON STACK OVERFLOW (or maybe Archlinux Forum?),
+# unfortunatly I don't remember who the person was. If you have the link to that
+# discussion, feel free to make to contact me and I will add the reference.
