@@ -5,6 +5,7 @@ path="$HOME/.local/bin/"
 scripts=(
     "./bpdfsplit"
     "./bkderestore"
+    "./dmenuwine"
 )
 
 for script in "${scripts[@]}"
