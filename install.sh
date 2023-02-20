@@ -4,6 +4,7 @@ path="$HOME/.local/bin/"
 
 scripts=(
     "./bpdfsplit"
+    "./bright"
     "./bkderestore"
     "./dmenuwine"
 )
