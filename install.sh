@@ -5,6 +5,7 @@ path="$HOME/.local/bin/"
 scripts=(
     "./histrm"
     "./pdfsplit"
+    "./bright"
     "./kde_restore_config"
     "./dmenuwine"
 )
