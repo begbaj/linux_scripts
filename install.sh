@@ -4,8 +4,8 @@ path="$HOME/.local/bin/"
 
 scripts=(
     "./histrm"
-    "./bpdfsplit"
-    "./bkderestore"
+    "./pdfsplit"
+    "./kde_restore_config"
     "./dmenuwine"
 )
 
