@@ -3,6 +3,7 @@
 path="$HOME/.local/bin/"
 
 scripts=(
+    "./histrm"
     "./bpdfsplit"
     "./bkderestore"
     "./dmenuwine"

@@ -1,0 +1,21 @@
+#!/bin/python3
+
+import os
+from sys import argv
+#-------------------------------------------------------------------------------
+# CONFIGURATION
+#-------------------------------------------------------------------------------
+HISTORY_FILE = os.path.expanduser('~/.local/share/.zsh_history')
+
+_HELP = "usage: histrm [<pattern>]\nhistrm is a tool to easly delete zsh history with pattern matching"
+
+def main():     
+    if not len(argv) >= 2:
+        print(_HELP)
+        exit(-1)
+    for arg in argv[1::]:
+        os.system(f"sed -i '/{arg}/d' {HISTORY_FILE}")
+
+
+if __name__ == "__main__":
+    main()
