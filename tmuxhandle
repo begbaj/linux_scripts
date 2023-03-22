@@ -1,0 +1,10 @@
+#!/bin/bash
+
+sessions=$(tmux list-sessions 2>&1)
+if [[ $sessions == *"no server running"* ]]; then
+    echo "creating new session"
+    exec tmux new-session
+else
+    echo "attaching to existing session"
+    exec tmux attach 
+fi

@@ -8,6 +8,7 @@ scripts=(
     "./bright"
     "./kde_restore_config"
     "./dmenuwine"
+    "./tmuxhandle"
 )
 
 for script in "${scripts[@]}"
