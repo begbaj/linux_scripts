@@ -9,6 +9,8 @@ scripts=(
     "./kde_restore_config"
     "./dmenuwine"
     "./tmuxhandle"
+    "./mkvenv"
+    "./avenv"
 )
 
 for script in "${scripts[@]}"

@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+venvname=$1
+
+if [ -z "$VENVDIR" ]; then
+	export VENVDIR=~/".local/virtualenvs"
+fi
+
+if [ -e "$VENVDIR" ]; then
+	echo "Directory of venvs: $VENVDIR"
+else
+	echo "Directory doesn't exist, use mkenv first"
+	exit -1
+fi
+
+if [ -e "$VENVDIR" ]; then
+	if [ -e "$VENVDIR/$venvname" ]; then
+		source $VENVDIR/$venvname/bin/activate
+		echo "source $VENVDIR/$venvname/bin/activate"
+	else
+		echo "Directory doesn't exist, use mkenv first"
+		exit -1
+	fi
+fi
