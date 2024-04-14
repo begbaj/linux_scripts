@@ -1,39 +1,59 @@
 #!/bin/bash
-#
-file=$1
-parts=$2
 
-pages=$(strings < $file | sed -n 's|.*/Count -\{0,1\}\([0-9]\{1,\}\).*|\1|p' | sort -rn | head -n 1)
-step=$((pages/parts))
+# Check for correct number of arguments
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <file> <parts>"
+    exit 1
+fi
+
+file="$1"
+parts="$2"
+
+# Check if input file exists
+if [ ! -f "$file" ] || [[ ! "$file" =~ \.pdf$ ]]; then
+    echo "Error: Input file does not exist or is not a PDF."
+    exit 1
+fi
+
+pages=$(strings < "$file" | sed -n 's|.*/Count -\{0,1\}\([0-9]\{1,\}\).*|\1|p' | sort -rn | head -n 1)
+step=$(awk "BEGIN {printf \"%d\", $pages/$parts}")
+
 echo "total number of pages: $pages"
-echo "each document will contain $step"
+echo "each document will contain $step pages"
 
-mkdir ./temp_splitting/
-cd ./temp_splitting/
+# Create directory for splitting
+mkdir -p "./temp_splitting/"
+cd "./temp_splitting/"
 
-# separate EACH page
-pdfseparate -f 1 -l $pages "../$file" "${file}_%d.pdf"
+# Separate EACH page
+pdfseparate -f 1 -l "$pages" "../$file" "${file}_%d.pdf"
 
 first=1
 last=$step
-# and then UNITE them
-for (( part=1; part<=$parts; part++ ))
-do
-    to_unite=""
-    united_name="${file}_part-${part}.pdf"
-    for (( i=$first; i<=$last; i++ ))
-    do
-	to_unite+="${file}_${i}.pdf "
-    done
-    pdfunite $to_unite ../$united_name
-    echo "united from $first to $last in $united_name"
-    first=$((last+1))
 
-    if [ $((part+1)) = $parts ]; then
-	last=$pages
-    else
-	last=$((last+step))
+# Unite the parts
+for (( part=1; part<=$parts; part++ )); do
+    united_name="${file}_part-${part}.pdf"
+    
+    if [ "$part" -eq "$parts" ]; then
+        last=$pages
     fi
+    
+    # Create an array to store individual PDFs
+    declare -a pdf_files=()
+    
+    for (( i=$first; i<=$last; i++ )); do
+        pdf_files+=("${file}_${i}.pdf")
+    done
+    
+    # Use pdfunite with the array of PDF files
+    pdfunite "${pdf_files[@]}" "../$united_name"
+    echo "united from $first to $last in $united_name"
+    
+    first=$((last+1))
+    last=$((last+step))
 done
-cd ../
-rm -r temp_splitting/
+
+# Clean up
+cd "../"
+rm -r "./temp_splitting/"

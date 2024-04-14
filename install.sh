@@ -11,6 +11,7 @@ scripts=(
     "./tmuxhandle"
     "./mkvenv"
     "./avenv"
+    "./nospaces"
 )
 
 for script in "${scripts[@]}"

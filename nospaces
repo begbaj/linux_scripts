@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Check for correct number of arguments
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <directory>"
+    exit 1
+fi
+
+directory="$1"
+
+# Check if the directory exists
+if [ ! -d "$directory" ]; then
+    echo "Error: Directory '$directory' does not exist."
+    exit 1
+fi
+
+# Go to the directory
+cd "$directory" || exit 1
+
+# Loop through each file in the directory
+for file in *; do
+    # Check if the file contains spaces
+    if [[ "$file" == *" "* ]]; then
+        # Replace spaces with underscores
+        new_file="${file// /_}"
+        
+        # Rename the file
+        mv "$file" "$new_file"
+        echo "Renamed '$file' to '$new_file'"
+    fi
+done
+
+echo "Spaces removed from filenames in '$directory'"
+
