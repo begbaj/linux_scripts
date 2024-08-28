@@ -1,0 +1,34 @@
+import fitz  # PyMuPDF
+import argparse
+
+def add_margin_to_pdf(ipath, opath, mcm):
+    # Convert margin size from cm to points (1 cm = 28.3465 points)
+    mpts = mcm * 28.3465
+
+    opdf = fitz.open(ipath)  # current PDF with 360 x 576 pages
+    npdf = fitz.open()  # new, target PDF
+    for opage in opdf:
+        w,h = opage.rect.br
+        print(w,h)
+        npage_rect = fitz.Rect(0,0, w+mpts, h+mpts)
+        tar_rect = fitz.Rect(mpts,mpts, w, h)
+        npage = npdf.new_page(width=npage_rect.width, height=npage_rect.height)  
+        npage.show_pdf_page(tar_rect, opdf, opage.number)
+    npdf.save(opath)
+    print(f"pdf {opath} successfully saved!")
+
+def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Add margins to all pages of a PDF file.')
+    parser.add_argument('ipdf', type=str, help='Input PDF file path')
+    parser.add_argument('opdf', type=str, help='Output PDF file path')
+    parser.add_argument('--m', type=float, default=1.0, help='Margin size in centimeters (default: 1cm)')
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Call the function with the provided arguments
+    add_margin_to_pdf(args.ipdf, args.opdf, args.m)
+
+if __name__ == "__main__":
+    main()
