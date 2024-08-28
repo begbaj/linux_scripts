@@ -5,7 +5,7 @@ from sys import argv
 #-------------------------------------------------------------------------------
 # CONFIGURATION
 #-------------------------------------------------------------------------------
-HISTORY_FILE = os.path.expanduser('~/.local/share/.zsh_history')
+HISTORY_FILE = os.path.expanduser('~/.zsh_history')
 
 _HELP = "usage: histrm [<pattern>]\nhistrm is a tool to easly delete zsh history with pattern matching"
 
