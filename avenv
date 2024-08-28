@@ -16,7 +16,7 @@ fi
 # Check if no argument is passed
 if [ -z "$venvname" ]; then
     echo "No virtual environment name provided. Available virtual environments:"
-    ls "$VENVDIR"
+    ls -l "$VENVDIR" | awk '{print $9}'
     exit 0
 fi
 
