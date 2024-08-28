@@ -3,22 +3,28 @@
 venvname=$1
 
 if [ -z "$VENVDIR" ]; then
-	export VENVDIR=~/".local/virtualenvs"
+    export VENVDIR=~/".local/virtualenvs"
 fi
 
 if [ -e "$VENVDIR" ]; then
-	echo "Directory of venvs: $VENVDIR"
+    echo "Directory of venvs: $VENVDIR"
 else
-	echo "Directory doesn't exist, use mkenv first"
-	exit -1
+    echo "Directory doesn't exist, use mkenv first"
+    exit -1
 fi
 
-if [ -e "$VENVDIR" ]; then
-	if [ -e "$VENVDIR/$venvname" ]; then
-		source $VENVDIR/$venvname/bin/activate
-		echo "source $VENVDIR/$venvname/bin/activate"
-	else
-		echo "Directory doesn't exist, use mkenv first"
-		exit -1
-	fi
+# Check if no argument is passed
+if [ -z "$venvname" ]; then
+    echo "No virtual environment name provided. Available virtual environments:"
+    ls "$VENVDIR"
+    exit 0
+fi
+
+# Continue with the activation if the venv name is provided
+if [ -e "$VENVDIR/$venvname" ]; then
+    source "$VENVDIR/$venvname/bin/activate"
+    echo "source $VENVDIR/$venvname/bin/activate"
+else
+    echo "Virtual environment '$venvname' doesn't exist, use mkenv first"
+    exit -1
 fi
