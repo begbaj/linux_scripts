@@ -12,6 +12,7 @@ scripts=(
     "./mkvenv"
     "./avenv"
     "./nospaces"
+    "./myip"
 )
 
 for script in "${scripts[@]}"
