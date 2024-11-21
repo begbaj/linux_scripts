@@ -1,0 +1,114 @@
+#!/bin/bash
+
+source "$HOME/.config/linux_scripts/envs"
+SCRATCHPAD_FILE="${local_path}/dirln.scratch"
+touch "$SCRATCHPAD_FILE"
+
+function show_help() {
+    echo "Usage: $0 [command] [arguments]"
+    echo ""
+    echo "Commands:"
+    echo "  set [name] [directory]   Add current directory to the scratchpad"
+    echo "  get <name>               Select a directory by name and print its path"
+    echo "  del <name|directory>     Remove a directory by name or path from the scratchpad"
+    echo ""
+    echo "  list                     List all directories in the scratchpad with their names"
+    echo "  clear                    Clear all directories from the scratchpad"
+    echo ""
+    echo "  help                     Show this help message"
+}
+
+function set_link() {
+    local name="${1:-link}"
+    local dir="${2:-$(pwd)}"  # Default to current working directory if no argument is given
+
+    if [[ -d "$dir" ]]; then
+        if [[ -n "$name" ]]; then
+            if ! grep -q "|$name$" "$SCRATCHPAD_FILE"; then
+                echo "$dir|$name" >> "$SCRATCHPAD_FILE"
+                echo "Added: $dir with name '$name'"
+            else
+                echo "Name already exists in the scratchpad: $name"
+            fi
+        else
+            if ! grep -q "^$dir|" "$SCRATCHPAD_FILE"; then
+                echo "$dir|" >> "$SCRATCHPAD_FILE"
+                echo "Added: $dir"
+            else
+                echo "Directory is already in the scratchpad: $dir"
+            fi
+        fi
+    else
+        echo "Invalid directory: $dir"
+    fi
+}
+
+function rm_link() {
+    local input="$1"
+
+    if grep -q "|$input$" "$SCRATCHPAD_FILE"; then
+        # Remove by name
+        grep -v "|$input$" "$SCRATCHPAD_FILE" > "${SCRATCHPAD_FILE}.tmp" && mv "${SCRATCHPAD_FILE}.tmp" "$SCRATCHPAD_FILE"
+        echo "Removed directory with name: $input"
+    elif grep -q "^$input|" "$SCRATCHPAD_FILE"; then
+        # Remove by path
+        grep -v "^$input|" "$SCRATCHPAD_FILE" > "${SCRATCHPAD_FILE}.tmp" && mv "${SCRATCHPAD_FILE}.tmp" "$SCRATCHPAD_FILE"
+        echo "Removed directory: $input"
+    else
+        echo "No matching directory or name found: $input"
+    fi
+}
+
+function ls_links() {
+    if [[ ! -s "$SCRATCHPAD_FILE" ]]; then
+        echo "The scratchpad is empty."
+        return
+    fi
+
+    echo "Directories in the scratchpad:"
+    nl -w 2 -s ". " "$SCRATCHPAD_FILE" | awk -F '|' '{printf "%s %-30s %s\n", $1, $2, ($3 ? "-> " $3 : "")}'
+}
+
+function get_link() {
+    local name="${1:-link}"
+
+    if [[ -z "$name" ]]; then
+        echo "You must provide a name to select."
+        return
+    fi
+
+    local dir
+    dir=$(awk -F '|' -v name="$name" '$2 == name {print $1}' "$SCRATCHPAD_FILE")
+    if [[ -n "$dir" ]]; then
+        echo "$dir"
+    else
+        echo "No directory found with name: $name"
+    fi
+}
+
+function clear_links() {
+    > "$SCRATCHPAD_FILE"
+    echo "Scratchpad cleared."
+}
+
+# Main
+case "$1" in
+    set)
+        set_link "$2" "$3"
+        ;;
+    get)
+        get_link "$2"
+        ;;
+    del)
+        rm_link "$2"
+        ;;
+    ls)
+        ls_links
+        ;;
+    clear)
+        clear_links
+        ;;
+    help|*)
+        show_help
+        ;;
+esac

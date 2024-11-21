@@ -1,0 +1,14 @@
+#!/bin/bash
+# disable_webcam.sh
+
+# Array of common video and webcam modules
+MODULES=("uvcvideo" "videodev" "v4l2_common" "v4l2loopback")
+
+for MODULE in "${MODULES[@]}"; do
+    if lsmod | grep -q $MODULE; then
+        sudo modprobe -r $MODULE
+        echo "Module $MODULE disabled."
+    else
+        echo "Module $MODULE is already disabled."
+    fi
+done

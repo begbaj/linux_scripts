@@ -1,0 +1,4 @@
+# env variables
+export bin_path="$HOME/.local/bin/"
+export local_path="$HOME/.local/share/linux_scripts/"
+export config_path="$HOME/.config/linux_scripts/"
