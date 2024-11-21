@@ -8,35 +8,53 @@ function show_help() {
     echo "Usage: $0 [command] [arguments]"
     echo ""
     echo "Commands:"
-    echo "  set [name] [directory]   Add current directory to the scratchpad"
-    echo "  get <name>               Select a directory by name and print its path"
-    echo "  del <name|directory>     Remove a directory by name or path from the scratchpad"
+    echo "  set [name] [-f] [-d <directory>]  Add a directory to the scratchpad with an optional name"
+    echo "  get <name>                       Select a directory by name and print its path"
+    echo "  del <name|directory>             Remove a directory by name or path from the scratchpad"
     echo ""
-    echo "  list                     List all directories in the scratchpad with their names"
-    echo "  clear                    Clear all directories from the scratchpad"
+    echo "  ls                               List all directories in the scratchpad with their names"
+    echo "  clear                            Clear all directories from the scratchpad"
     echo ""
-    echo "  help                     Show this help message"
+    echo "  help                             Show this help message"
 }
 
 function set_link() {
-    local name="${1:-link}"
-    local dir="${2:-$(pwd)}"  # Default to current working directory if no argument is given
+    local name="link"  # Default name
+    local dir="$(pwd)"  # Default to current working directory
+    local force_overwrite=false
+
+    # Parse arguments
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -f)
+                force_overwrite=true
+                shift
+                ;;
+            -d)
+                dir="$2"
+                shift 2
+                ;;
+            *)
+                name="$1"
+                shift
+                ;;
+        esac
+    done
 
     if [[ -d "$dir" ]]; then
-        if [[ -n "$name" ]]; then
-            if ! grep -q "|$name$" "$SCRATCHPAD_FILE"; then
+        if grep -q "|$name$" "$SCRATCHPAD_FILE"; then
+            if [[ "$force_overwrite" == true || "$name" == "link" ]]; then
+                # Remove any existing entry with the same name
+                local prev=$(get_link "$name")
+                grep -v "|$name$" "$SCRATCHPAD_FILE" > "${SCRATCHPAD_FILE}.tmp" && mv "${SCRATCHPAD_FILE}.tmp" "$SCRATCHPAD_FILE"
                 echo "$dir|$name" >> "$SCRATCHPAD_FILE"
-                echo "Added: $dir with name '$name'"
+                echo "Updated $name with $dir (previous was $prev)"
             else
-                echo "Name already exists in the scratchpad: $name"
+                echo "Name '$name' already exists in the scratchpad with directory $(get_link "$name"). Use -f to overwrite."
             fi
         else
-            if ! grep -q "^$dir|" "$SCRATCHPAD_FILE"; then
-                echo "$dir|" >> "$SCRATCHPAD_FILE"
-                echo "Added: $dir"
-            else
-                echo "Directory is already in the scratchpad: $dir"
-            fi
+            echo "$dir|$name" >> "$SCRATCHPAD_FILE"
+            echo "Added $dir with name '$name'"
         fi
     else
         echo "Invalid directory: $dir"
@@ -65,7 +83,7 @@ function ls_links() {
         return
     fi
 
-    echo "Directories in the scratchpad:"
+    echo "Links in the scratchpad:"
     nl -w 2 -s ". " "$SCRATCHPAD_FILE" | awk -F '|' '{printf "%s %-30s %s\n", $1, $2, ($3 ? "-> " $3 : "")}'
 }
 
@@ -82,7 +100,7 @@ function get_link() {
     if [[ -n "$dir" ]]; then
         echo "$dir"
     else
-        echo "No directory found with name: $name"
+        echo "No link found with name: $name"
     fi
 }
 
@@ -94,13 +112,16 @@ function clear_links() {
 # Main
 case "$1" in
     set)
-        set_link "$2" "$3"
+        shift
+        set_link "$@"
         ;;
     get)
-        get_link "$2"
+        shift
+        get_link "$@"
         ;;
     del)
-        rm_link "$2"
+        shift
+        rm_link "$@"
         ;;
     ls)
         ls_links
