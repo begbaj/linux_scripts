@@ -32,8 +32,8 @@ mv $(dirln get) .
 ```
 ### Best with aliases
 ```bash
-alias dircp="cp $(dirln get) ."
-alias dirmv="mv $(dirln get) ."
+alias dircp="cp -i $(dirln get) ."
+alias dirmv="mv -i $(dirln get) ."
 ```
 
 
