@@ -14,6 +14,7 @@ def main():
         print(_HELP)
         exit(-1)
     for arg in argv[1::]:
+        os.system(f"sed -n '/{arg}/p' {HISTORY_FILE}")
         os.system(f"sed -i '/{arg}/d' {HISTORY_FILE}")
 
 
