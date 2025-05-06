@@ -2,58 +2,80 @@
 
 # Check for correct number of arguments
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <file> <parts>"
-    exit 1
+  echo "Usage: $0 <file> <parts>"
+  exit 1
 fi
 
 file="$1"
 parts="$2"
 
-# Check if input file exists
-if [ ! -f "$file" ] || [[ ! "$file" =~ \.pdf$ ]]; then
-    echo "Error: Input file does not exist or is not a PDF."
-    exit 1
+# Check if input file exists and is a PDF
+if [ ! -f "$file" ] || [[ "$file" != *.pdf ]]; then
+  echo "Error: Input file does not exist or is not a PDF."
+  exit 1
 fi
 
-pages=$(strings < "$file" | sed -n 's|.*/Count -\{0,1\}\([0-9]\{1,\}\).*|\1|p' | sort -rn | head -n 1)
-step=$(awk "BEGIN {printf \"%d\", $pages/$parts}")
+# Get total number of pages using pdfinfo
+if ! command -v pdfinfo &>/dev/null; then
+  echo "Error: pdfinfo is not installed. Install poppler-utils."
+  exit 1
+fi
 
-echo "total number of pages: $pages"
-echo "each document will contain $step pages"
+pages=$(pdfinfo "$file" | awk '/Pages:/ {print $2}')
+
+# Ensure pages and parts are valid
+if ! [[ "$pages" =~ ^[0-9]+$ ]] || ! [[ "$parts" =~ ^[0-9]+$ ]] || [ "$parts" -le 0 ] || [ "$pages" -lt "$parts" ]; then
+  echo "Error: Invalid number of pages or parts."
+  exit 1
+fi
+
+step=$((pages / parts))
+remainder=$((pages % parts))
+
+echo "Total number of pages: $pages"
+echo "Each document will contain approximately $step pages"
 
 # Create directory for splitting
-mkdir -p "./temp_splitting/"
-cd "./temp_splitting/"
+mkdir -p temp_splitting
+cd temp_splitting || exit 1
 
 # Separate EACH page
-pdfseparate -f 1 -l "$pages" "../$file" "${file}_%d.pdf"
+pdfseparate -f 1 -l "$pages" "../$file" "page_%d.pdf"
 
 first=1
-last=$step
 
-# Unite the parts
-for (( part=1; part<=$parts; part++ )); do
-    united_name="${file}_part-${part}.pdf"
-    
-    if [ "$part" -eq "$parts" ]; then
-        last=$pages
-    fi
-    
-    # Create an array to store individual PDFs
-    declare -a pdf_files=()
-    
-    for (( i=$first; i<=$last; i++ )); do
-        pdf_files+=("${file}_${i}.pdf")
-    done
-    
-    # Use pdfunite with the array of PDF files
-    pdfunite "${pdf_files[@]}" "../$united_name"
-    echo "united from $first to $last in $united_name"
-    
-    first=$((last+1))
-    last=$((last+step))
+# Split and merge PDFs
+for ((part = 1; part <= parts; part++)); do
+  last=$((first + step - 1))
+
+  # Distribute remainder pages across parts
+  if [ "$remainder" -gt 0 ]; then
+    last=$((last + 1))
+    ((remainder--))
+  fi
+
+  # Ensure last page does not exceed total pages
+  if [ "$last" -gt "$pages" ]; then
+    last=$pages
+  fi
+
+  # Create an array to store individual PDFs
+  pdf_files=()
+  for ((i = first; i <= last; i++)); do
+    pdf_files+=("page_${i}.pdf")
+  done
+
+  # Unite the pages
+  united_name="../${file%.pdf}_part-${part}.pdf"
+  pdfunite "${pdf_files[@]}" "$united_name"
+
+  echo "Merged pages $first to $last into $united_name"
+
+  first=$((last + 1))
 done
 
 # Clean up
-cd "../"
-rm -r "./temp_splitting/"
+cd ..
+rm -r temp_splitting
+
+echo "Splitting and merging completed successfully."
