@@ -1,0 +1,133 @@
+#!/bin/sh
+# avenv - a really really simple python venv manager bash script
+
+function init(){
+    if [ -z "$VENVDIR" ]; then
+        export VENVDIR=~/".local/virtualenvs"
+    fi
+}
+
+function list_venv(){
+    ls -l "$VENVDIR" | awk '{print $9}'
+}
+
+function get_env(){
+    # command: avenv <venv_name>
+    local venv_name=$1 
+
+    if [ -z "$venv_name" ]; then
+        echo "No virtual environment name provided. Available virtual environments:"
+        list_venv
+        exit 0 
+    fi
+
+    # Continue with the activation if the venv name is provided
+    if [ -e "$VENVDIR/$venv_name" ]; then
+        source "$VENVDIR/$venv_name/bin/activate"
+        echo "source $VENVDIR/$venv_name/bin/activate"
+    else
+        echo "Virtual environment '$venv_name' doesn't exist, use avenv --mk '$venv_name' first."
+        exit -1
+    fi
+}
+
+function check_directory(){
+    if [ -z "$VENVDIR" ]; then
+        echo "Directory doesn't exist, would like to make it in $VENVDIR?"
+        echo "If you want to change directory, exit and export VENVDIR variable."
+        read -n 1 -p "(y/N) " answer
+
+        if [[ $answer == "Y" || $answer == "y" ]]; then
+            mkdir $VENVDIR
+            echo "Directory created."
+        else
+            echo "Exiting"
+            exit -1
+        fi
+    fi
+}
+
+function mkvenv(){
+    local venvname=$1
+	if [ -e "$VENVDIR/$venvname" ]; then
+		echo "A venv named $venvname already exitsts!"
+		exit -1
+	fi
+	echo "Creating venv $venvname"
+
+	cd $VENVDIR
+	python -m venv $venvname
+
+	shift
+	# Iterate through the remaining arguments
+	for arg in "$@"; do
+		cd $venvname
+		bin/python -m pip install $arg
+	done
+}
+
+function show_help(){
+    cat << EOF
+
+avenv - A really simple Python virtual environment manager for Linux-based OS.
+
+Usage:
+  avenv [OPTION] [VENV_NAME] [PACKAGES...]
+
+Options:
+  -m, --mk, --make <venv_name> [<package1> ...]
+      Create a new virtual environment and optionally install packages.
+  -l, --list
+      List all available virtual environments.
+  <venv_name>
+      print the "activate" path to be sourced.
+
+Examples:
+  avenv --list
+      List all available virtual environments.
+
+  source avenv myenv
+      Activate the virtual environment named "myenv".
+
+Notes:
+  By default, virtual environments are stored in: ~/.local/virtualenvs.
+  You can set the VENVDIR environment variable to change this location.
+  Important: to actually activate a venv, you schould run something like:
+        source avenv myenv
+
+EOF
+}
+
+
+init
+check_directory
+
+case "$1" in
+    -m | --mk | --make)
+        mkvenv "$2"
+    ;;
+    -l | --list)
+        list_venv
+    ;;
+    -h | --help)
+        show_help
+    ;;
+    --cd)
+        cd $VENVDIR
+        current_shell=$(ps -p $$ -o comm=)
+        exec $current_shell
+    ;;
+    -*)
+        echo "$1 is not a valid command"
+        show_help
+    ;;
+
+    *)
+        if [ -n "$1" ]; then
+            get_env "$1"
+        else
+            show_help
+        fi
+    ;;
+
+esac

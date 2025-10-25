@@ -10,32 +10,30 @@ mkdir -pv $local_path
 
 cd configs
 configs=(
-	'./envs'
+  './envs'
 )
-for config in "${configs[@]}"
-do
-    cp $config $config_path
-    echo "$config copied into "
+for config in "${configs[@]}"; do
+  cp $config $config_path
+  echo "$config copied into "
 done
 cd ..
 
 cd scripts
 scripts=(
-    "./histrm"
-    "./pdfsplit"
-    "./bright"
-    "./kde_restore_config"
-    "./dmenuwine"
-    "./tmuxhandle"
-    "./mkvenv"
-    "./avenv"
-    "./nospaces"
-    "./myip"
-    "./dirln"
+  "./histrm"
+  "./pdfsplit"
+  "./bright"
+  "./kde_restore_config"
+  "./dmenuwine"
+  "./tmuxhandle"
+  "./avenv/mkvenv"
+  "./avenv/avenv"
+  "./nospaces"
+  "./myip"
+  "./dirln"
 )
 
-for script in "${scripts[@]}"
-do
-    cp $script $bin_path
-    echo "$script installed"
+for script in "${scripts[@]}"; do
+  cp $script $bin_path
+  echo "$script installed"
 done
