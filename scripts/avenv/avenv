@@ -8,7 +8,7 @@ function init(){
 }
 
 function list_venv(){
-    ls -l "$VENVDIR" | awk '{print $9}'
+    ls -l "$VENVDIR" | awk 'NR>=2 {print $9}'
 }
 
 function get_env(){
@@ -66,6 +66,27 @@ function mkvenv(){
 	done
 }
 
+rmvenv() {
+  local venvname=$1
+  local target="$VENVDIR/$venvname"
+
+  [ ! -e "$target" ] && { echo "$venvname not found."; return 1; }
+
+  read -n 1 -p "Delete $venvname? (y/N) " answer
+  echo
+  case "$answer" in
+    y|Y)
+      rm -r -- "$target"
+      echo "Deleted $venvname."
+      return 0
+      ;;
+    *)
+      echo "Aborted."
+      return 1
+      ;;
+  esac
+}
+
 function show_help(){
     cat << EOF
 
@@ -77,8 +98,15 @@ Usage:
 Options:
   -m, --mk, --make <venv_name> [<package1> ...]
       Create a new virtual environment and optionally install packages.
+
+  -r, --rm, --remove <venv_name>
+      Remove (permanently!) an existing virtual environment. Caution: this function uses 'rm -rf'
+      and procedes if <venv_name> is a directory found in $VENVDIR
+      If '..' is given, it may DELETE something that you didn't intend to.
+
   -l, --list
       List all available virtual environments.
+
   <venv_name>
       print the "activate" path to be sourced.
 
@@ -108,6 +136,9 @@ case "$1" in
     ;;
     -l | --list)
         list_venv
+    ;;
+    -r | --rm | --remove)
+        rmvenv "$2"
     ;;
     -h | --help)
         show_help
