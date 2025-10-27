@@ -6,7 +6,7 @@ local_path="$HOME/.local/share/linux_scripts"
 config_path="$HOME/.config/linux_scripts"
 
 configs="envs"
-scripts="histrm pdfsplit bright kde_restore_config dmenuwine tmuxhandle avenv/avenv nospaces myip dirln"
+scripts="begscripts histrm pdfsplit bright kde_restore_config dmenuwine tmuxhandle avenv/avenv nospaces myip dirln"
 
 case "${1:-}" in
 install)

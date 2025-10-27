@@ -1,0 +1,19 @@
+#!/bin/bash
+
+cat <<EOF
+begscripts is a collection of Bash scripts.
+
+  bright    - change screen brightness
+  dirln     - when operating into two different shells, dirln lets you copy and use a path from one to the other
+  dmenuwine - obsolete, a dmenu script to show programs installed with wine
+  histrm    - pattern matching shell history deletion
+  kde_restore_config  - easy script to reset kde configuration to default
+  myip      - show your public ip address
+  nospaces  - remove spaces from filenames
+  pdfmargin - adds white border to pdf pages (so they can be printed as they should)
+  pdfsplit  - split a pdf into equal parts
+  tmuxhandle  - attach to existing tmux session, if it doesn't exist create one
+  webcamoff   - hard switchoff webcam
+
+have fun
+EOF
