@@ -26,7 +26,7 @@ function get_env(){
         source "$VENVDIR/$venv_name/bin/activate"
         echo "source $VENVDIR/$venv_name/bin/activate"
     else
-        echo "Virtual environment '$venv_name' doesn't exist, use avenv --mk '$venv_name' first."
+        echo "Virtual environment '$venv_name' doesn't exist, use avenv -m '$venv_name' first."
         exit -1
     fi
 }
@@ -45,6 +45,23 @@ function check_directory(){
             exit -1
         fi
     fi
+}
+
+function prefix(){
+    local venv_name=$1 
+    if [ -z "$venv_name" ]; then
+        echo "No virtual environment name provided. Available virtual environments:"
+        list_venv
+        exit 0 
+    fi
+
+    if [ -e "$VENVDIR/$venv_name" ]; then
+        echo "$VENVDIR/$venv_name/"
+    else
+        echo "Virtual environment '$venv_name' doesn't exist, use avenv -m '$venv_name' first."
+        exit -1
+    fi
+
 }
 
 function mkvenv(){
@@ -96,13 +113,16 @@ Usage:
   avenv [OPTION] [VENV_NAME] [PACKAGES...]
 
 Options:
-  -m, --mk, --make <venv_name> [<package1> ...]
+  -m, --make <venv_name> [<package1> ...]
       Create a new virtual environment and optionally install packages.
 
-  -r, --rm, --remove <venv_name>
+  -r, --remove <venv_name>
       Remove (permanently!) an existing virtual environment. Caution: this function uses 'rm -rf'
       and procedes if <venv_name> is a directory found in $VENVDIR
       If '..' is given, it may DELETE something that you didn't intend to.
+
+  -j, <venv_name>
+      Print the PREFIX dir of <venv_name>
 
   -l, --list
       List all available virtual environments.
@@ -131,18 +151,26 @@ init
 check_directory
 
 case "$1" in
-    -m | --mk | --make)
+    -m | --make)
         mkvenv "$2"
     ;;
+
     -l | --list)
         list_venv
     ;;
-    -r | --rm | --remove)
+
+    -r | --remove)
         rmvenv "$2"
     ;;
+
+    -j)
+        prefix "$2"
+    ;;
+
     -h | --help)
         show_help
     ;;
+
     --cd)
         cd $VENVDIR
         current_shell=$(ps -p $$ -o comm=)
