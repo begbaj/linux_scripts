@@ -21,6 +21,7 @@ function get_env() {
 
   # Continue with the activation if the venv name is provided
   if [ -e "$VENVDIR/$1" ]; then
+    source "$VENVDIR/$1/bin/activate"
     echo "source $VENVDIR/$1/bin/activate"
   else
     echo "Virtual environment '$1' doesn't exist, use avenv -m '$1' first."
