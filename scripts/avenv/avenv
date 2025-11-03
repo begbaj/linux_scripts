@@ -69,13 +69,13 @@ function mkvenv() {
   fi
   echo "Creating venv $venvname"
 
-  cd "$VENVDIR" || echo "couldn't access $VEVNDIR" && return
+  cd "$VENVDIR" || echo "couldn't access $VEVNDIR" | return
   python -m venv "$venvname"
 
   shift
   # Iterate through the remaining arguments
   for arg in "$@"; do
-    cd "$venvname" || echo "couldn't access $venvname" && return
+    cd "$venvname" || echo "couldn't access $venvname" | return
     bin/python -m -- pip install "$arg"
   done
 }
@@ -178,7 +178,7 @@ case "$1" in
   ;;
 
 --cd)
-  cd $VENVDIR
+  cd "$VENVDIR" || exit
   current_shell=$(ps -p $$ -o comm=)
   exec $current_shell
   ;;
