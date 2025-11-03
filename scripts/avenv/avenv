@@ -1,111 +1,111 @@
-#!/bin/sh
+#!/bin/bash
 # avenv - a really really simple python venv manager bash script
 
-function init(){
-    if [ -z "$VENVDIR" ]; then
-        export VENVDIR=~/".local/virtualenvs"
-    fi
+function init() {
+  if [ -z "$VENVDIR" ]; then
+    export VENVDIR="$HOME/.local/virtualenvs"
+  fi
 }
 
-function list_venv(){
-    ls -l "$VENVDIR" | awk 'NR>=2 {print $9}'
+function list_venv() {
+  ls -l "$VENVDIR" | awk 'NR>=2 {print $9}'
 }
 
-function get_env(){
-    # command: avenv <venv_name>
-    local venv_name=$1 
+function get_env() {
 
-    if [ -z "$venv_name" ]; then
-        echo "No virtual environment name provided. Available virtual environments:"
-        list_venv
-        exit 0 
-    fi
+  if [ -z "$1" ]; then
+    echo "No virtual environment name provided. Available virtual environments:"
+    list_venv
+    return
+  fi
 
-    # Continue with the activation if the venv name is provided
-    if [ -e "$VENVDIR/$venv_name" ]; then
-        source "$VENVDIR/$venv_name/bin/activate"
-        echo "source $VENVDIR/$venv_name/bin/activate"
+  # Continue with the activation if the venv name is provided
+  if [ -e "$VENVDIR/$1" ]; then
+    echo "source $VENVDIR/$1/bin/activate"
+  else
+    echo "Virtual environment '$1' doesn't exist, use avenv -m '$1' first."
+    return
+  fi
+}
+
+function check_directory() {
+  if [ ! -d "$VENVDIR" ]; then
+    echo "Directory doesn't exist, would like to make it in $VENVDIR?"
+    echo "If you want to change directory, exit and export VENVDIR variable."
+    read -r -n 1 -p "(y/N) " answer
+
+    if [[ $answer == "Y" || $answer == "y" ]]; then
+      mkdir -p "$VENVDIR"
+      echo "Directory created."
     else
-        echo "Virtual environment '$venv_name' doesn't exist, use avenv -m '$venv_name' first."
-        exit -1
+      echo "Exiting"
+      return
     fi
+  fi
 }
 
-function check_directory(){
-    if [ -z "$VENVDIR" ]; then
-        echo "Directory doesn't exist, would like to make it in $VENVDIR?"
-        echo "If you want to change directory, exit and export VENVDIR variable."
-        read -n 1 -p "(y/N) " answer
+function prefix() {
+  local venv_name=$1
+  if [ -z "$venv_name" ]; then
+    echo "No virtual environment name provided. Available virtual environments:"
+    list_venv
+    return
+  fi
 
-        if [[ $answer == "Y" || $answer == "y" ]]; then
-            mkdir $VENVDIR
-            echo "Directory created."
-        else
-            echo "Exiting"
-            exit -1
-        fi
-    fi
-}
-
-function prefix(){
-    local venv_name=$1 
-    if [ -z "$venv_name" ]; then
-        echo "No virtual environment name provided. Available virtual environments:"
-        list_venv
-        exit 0 
-    fi
-
-    if [ -e "$VENVDIR/$venv_name" ]; then
-        echo "$VENVDIR/$venv_name/"
-    else
-        echo "Virtual environment '$venv_name' doesn't exist, use avenv -m '$venv_name' first."
-        exit -1
-    fi
+  if [ -e "$VENVDIR/$venv_name" ]; then
+    echo "$VENVDIR/$venv_name/"
+  else
+    echo "Virtual environment '$venv_name' doesn't exist, use avenv -m '$venv_name' first."
+    return
+  fi
 
 }
 
-function mkvenv(){
-    local venvname=$1
-	if [ -e "$VENVDIR/$venvname" ]; then
-		echo "A venv named $venvname already exitsts!"
-		exit -1
-	fi
-	echo "Creating venv $venvname"
+function mkvenv() {
+  local venvname=$1
+  if [ -e "$VENVDIR/$venvname" ]; then
+    echo "A venv named $venvname already exitsts!"
+    return
+  fi
+  echo "Creating venv $venvname"
 
-	cd $VENVDIR
-	python -m venv $venvname
+  cd "$VENVDIR" || echo "couldn't access $VEVNDIR" && return
+  python -m venv "$venvname"
 
-	shift
-	# Iterate through the remaining arguments
-	for arg in "$@"; do
-		cd $venvname
-		bin/python -m pip install $arg
-	done
+  shift
+  # Iterate through the remaining arguments
+  for arg in "$@"; do
+    cd "$venvname" || echo "couldn't access $venvname" && return
+    bin/python -m -- pip install "$arg"
+  done
 }
 
-rmvenv() {
+function rmvenv() {
   local venvname=$1
   local target="$VENVDIR/$venvname"
 
-  [ ! -e "$target" ] && { echo "$venvname not found."; return 1; }
+  [ ! -e "$target" ] && {
+    echo "$venvname not found."
+    return 1
+  }
 
-  read -n 1 -p "Delete $venvname? (y/N) " answer
+  read -r -n 1 -p "Delete $venvname? (y/N) " answer
   echo
   case "$answer" in
-    y|Y)
-      rm -r -- "$target"
-      echo "Deleted $venvname."
-      return 0
-      ;;
-    *)
-      echo "Aborted."
-      return 1
-      ;;
+  y | Y)
+    rm -r -- "$target"
+    echo "Deleted $venvname."
+    return 0
+    ;;
+  *)
+    echo "Aborted."
+    return 0
+    ;;
   esac
 }
 
-function show_help(){
-    cat << EOF
+function show_help() {
+  cat <<EOF
 
 avenv - A really simple Python virtual environment manager for Linux-based OS.
 
@@ -115,6 +115,9 @@ Usage:
 Options:
   -m, --make <venv_name> [<package1> ...]
       Create a new virtual environment and optionally install packages.
+
+  -c 
+      Run directory check.
 
   -r, --remove <venv_name>
       Remove (permanently!) an existing virtual environment. Caution: this function uses 'rm -rf'
@@ -146,47 +149,50 @@ Notes:
 EOF
 }
 
-
 init
 check_directory
 
 case "$1" in
-    -m | --make)
-        mkvenv "$2"
-    ;;
+-m | --make)
+  mkvenv "$2"
+  ;;
 
-    -l | --list)
-        list_venv
-    ;;
+-l | --list)
+  list_venv
+  ;;
 
-    -r | --remove)
-        rmvenv "$2"
-    ;;
+-c)
+  check_directory
+  ;;
 
-    -j)
-        prefix "$2"
-    ;;
+-r | --remove)
+  rmvenv "$2"
+  ;;
 
-    -h | --help)
-        show_help
-    ;;
+-j)
+  prefix "$2"
+  ;;
 
-    --cd)
-        cd $VENVDIR
-        current_shell=$(ps -p $$ -o comm=)
-        exec $current_shell
-    ;;
-    -*)
-        echo "$1 is not a valid command"
-        show_help
-    ;;
+-h | --help)
+  show_help
+  ;;
 
-    *)
-        if [ -n "$1" ]; then
-            get_env "$1"
-        else
-            show_help
-        fi
-    ;;
+--cd)
+  cd $VENVDIR
+  current_shell=$(ps -p $$ -o comm=)
+  exec $current_shell
+  ;;
+-*)
+  echo "$1 is not a valid command"
+  show_help
+  ;;
+
+*)
+  if [ -n "$1" ]; then
+    get_env "$1"
+  else
+    show_help
+  fi
+  ;;
 
 esac
