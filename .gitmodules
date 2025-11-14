@@ -1,0 +1,3 @@
+[submodule "scripts/avenv"]
+	path = scripts/avenv
+	url = https://github.com/begbaj/avenv

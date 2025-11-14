@@ -6,7 +6,7 @@ local_path="$HOME/.local/share/linux_scripts"
 config_path="$HOME/.config/linux_scripts"
 
 configs="envs"
-scripts="begscripts extra/histrm extra/pdfsplit extra/bright extra/kde_restore_config extra/dmenuwine extra/tmuxhandle avenv/avenv extra/nospaces extra/myip extra/dirln"
+scripts="bscripts extra/histrm extra/pdfsplit extra/bright extra/kde_restore_config extra/dmenuwine extra/tmuxhandle avenv/avenv extra/nospaces extra/myip extra/dirln"
 
 case "${1:-}" in
 install)
