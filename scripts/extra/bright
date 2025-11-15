@@ -1,22 +1,73 @@
 #!/bin/bash
 
-OUTPUT="$1"
-CURRENT_BRIGHTNESS=$(xrandr --verbose | grep -m 1 $OUTPUT -A 10 | grep "Brightness" | sed 's/^[ \t]*Brightness:[ \t]*\([0-9.]*\).*/\1/')
+B_DEVICE="$1"
 
-if [[ "$2" == "inc" ]]; then
-  NEW_BRIGHTNESS=$(echo "$CURRENT_BRIGHTNESS + 0.1" | bc)
-elif [[ "$2" == "dec" ]]; then
-  NEW_BRIGHTNESS=$(echo "$CURRENT_BRIGHTNESS - 0.1" | bc)
-else
-  echo "Invalid argument. Use 'inc' or 'dec' to specify whether to increase or decrease the brightness."
-  exit 1
-fi
+soft() {
+  CURRENT_BRIGHTNESS=$(xrandr --verbose | grep -m 1 $B_DEVICE -A 10 | grep "Brightness" | sed 's/^[ \t]*Brightness:[ \t]*\([0-9.]*\).*/\1/')
 
-if [[ $(echo "$NEW_BRIGHTNESS > 1.0" | bc) -eq 1 ]]; then
-  NEW_BRIGHTNESS=1.0
-elif [[ $(echo "$NEW_BRIGHTNESS < 0.0" | bc) -eq 1 ]]; then
-  NEW_BRIGHTNESS=0.0
-fi
+  if [[ "$1" == "inc" ]]; then
+    NEW_BRIGHTNESS=$(echo "$CURRENT_BRIGHTNESS + 0.1" | bc)
+  elif [[ "$1" == "dec" ]]; then
+    NEW_BRIGHTNESS=$(echo "$CURRENT_BRIGHTNESS - 0.1" | bc)
+  else
+    echo "Invalid argument. Use 'inc' or 'dec' to specify whether to increase or decrease the brightness."
+    exit 1
+  fi
 
-# Set the new brightness using xrandr
-xrandr --output "$OUTPUT" --brightness "$NEW_BRIGHTNESS"
+  if [[ $(echo "$NEW_BRIGHTNESS > 1.0" | bc) -eq 1 ]]; then
+    NEW_BRIGHTNESS=1.0
+  elif [[ $(echo "$NEW_BRIGHTNESS < 0.0" | bc) -eq 1 ]]; then
+    NEW_BRIGHTNESS=0.0
+  fi
+
+  # Set the new brightness using xrandr
+  xrandr --output "$B_DEVICE" --brightness "$NEW_BRIGHTNESS"
+}
+
+hard() {
+  current_value=$(
+    ddcutil -d 1 getvcp 10 |
+      awk -F'=' '/current value/ { gsub(/[^0-9]/,"",$2); print $2 }'
+  )
+
+  case "$1" in
+  inc)
+    new_value=$(echo "$current_value + 10" | bc)
+    ;;
+  dec)
+    new_value=$(echo "$current_value - 10" | bc)
+    ;;
+  esac
+
+  ddcutil -d "$B_DEVICE" setvcp 10 "$new_value"
+}
+
+show_help() {
+  cat <<EOF
+usage:
+bright <monitor_id> <mode> <inc|dec>
+
+  monitor_id is determined by which mode you use:
+    if in "soft" mode, refer to xrandr monitor identifier
+    if in "hard" mode, refere to ddcutil monitor identifier
+
+  mode is rather hard or soft:
+    soft uses xrandr, software level brightness
+    hard uses ddcutil, hardware level brightness
+
+  inc by +5% or dec by -5%
+EOF
+
+}
+
+case "$2" in
+hard)
+  hard "$3"
+  ;;
+soft)
+  soft "$3"
+  ;;
+*)
+  show_help
+  ;;
+esac
